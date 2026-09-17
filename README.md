@@ -4,6 +4,12 @@
 
 This folder is a **pitfall notebook**, not Cursor project rules (do not put it in `.cursor/rules/`).
 
+## 工程环境 / Project context
+
+Unity VR 游戏。玩家交互用 **Auto Hand**；unit 身体/布娃娃用 **PM（PuppetMaster）**。XR 走 OpenXR（本机常见 PICO + SteamVR）。
+
+Unity VR game. Player interaction uses **Auto Hand**. Units use **PM (PuppetMaster)** for body/ragdoll. XR is OpenXR (here often PICO + SteamVR).
+
 同类问题反复改代码仍不对时，先对照这里的**问题 + 解决方案**。
 
 When the same class of bug keeps surviving code changes, match **Problem** and **Solution** here first.
