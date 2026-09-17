@@ -1,43 +1,29 @@
-# VR 右手「距真实地面高度」读错坐标系
+# 右手距真实地面高度读错 / Wrong right-hand height vs real floor
 
-## 现象
+## 问题 / Problem
 
-Editor 设置 UI 背面要显示**右手相对真实地面**的高度（例如控制器放桌上约 0.8m）。  
-试过 `trackingContainer` 逆变换、`follow.localPosition.y`、Unity 世界 `position.y`、头显 `headCamera.localPosition.y`、多条 fallback 对照表——数值要么不动、要么差 0.6m 量级，要么全是头高。
+要显示右手相对**真实地面**的高度（例如控制器放桌上约 0.8m）。用 `trackingContainer` 逆变换、`follow.localPosition.y`、Unity 世界 `position.y`、头显 local Y 等，数值要么不动、要么差约 0.6m、要么变成头高。
 
-## 错因
+Need right-hand height above the **real / guardian floor** (e.g. ~0.8m when the controller is on a table). Inverse `trackingContainer`, `follow.localPosition.y`, Unity world `position.y`, or HMD local Y stay frozen, miss by ~0.6m, or report head height.
 
-VR3 运行时叠了两套竖直参考：
+## 解决方案 / Solution
 
-1. **XR Floor 空间**（OpenXR / `InputDevices`，Y = 相对 guardian 校准地面）  
-2. **AutoHand + `XrOriginFloorTrackingBootstrap`**（把 tracking 原点贴到**游戏 mesh 地面**，改写了 rig 世界 Y）
+工程里有两套竖直参考：XR Floor（相对校准地面）和 AutoHand / `XrOriginFloorTrackingBootstrap`（原点贴到**游戏 mesh 地面**）。游戏世界 / AH 链上的 Y 不是真实地面高度。
 
-把 **游戏世界 / AH Transform 链** 里的 Y 当成「真实地面高度」，量的是相对游戏地或 prefab 偏移，不是相对真实地面。
+There are two vertical references: XR Floor (guardian-calibrated) and AutoHand / `XrOriginFloorTrackingBootstrap` (origin snapped to **in-game mesh floor**). Y on the game-world / AutoHand chain is not real-floor height.
 
-| 误用读法 | 实际量在什么 |
+| 误用 / Wrong read | 实际量的是 / What you actually measure |
 |---|---|
-| `trackingContainer.InverseTransformPoint(手世界).y` | AH 贴游戏地后的容器；follow 常不在该链上 → 易 **+~0.6m** |
-| `handRight.follow.localPosition.y` | prefab 固定 local 偏移 → **不随手柄变** |
-| `RightControllerGO` / follow **世界 Y**（或减 tracking 地面） | Unity **场景高度** |
-| `headCamera.localPosition.y` 当手高 | **头显身高**（~1.1–1.2m），不是手 |
+| `trackingContainer.InverseTransformPoint(hand).y` | AH 贴游戏地后的容器，易 +~0.6m / Container after AH snap; often +~0.6m |
+| `handRight.follow.localPosition.y` | prefab 固定偏移，不随手柄变 / Prefab local offset, does not track the controller |
+| 手世界 Y / Hand world Y | 场景高度 / Scene height |
+| `headCamera.localPosition.y` 当手高 / as hand height | 头显身高 / HMD height |
 
-## 正确做法（本项目已验证）
+**正确读法 / Correct read（已验证 / verified）：**
 
-**右手距真实地面**（单一值，无 fallback）：
-
-- 前提：`XrOriginFloorTrackingBootstrap.IsFloorTrackingApplied == true`（XR 激活时）  
-- 读：`InputDevices.GetDeviceAtXRNode(XRNode.RightHand)` → `CommonUsages.devicePosition.y`（需 `isTracked`）  
-- 标签：`xrRightDeviceY`（曾用于 Editor 背面 HUD / 扳机采样，已移除）
-
-**头显**距真实地面仍是另一条链（不要混用手公式）：
-
-- `headCamera.transform.localPosition.y`（+ Floor 门控）→ `TryGetMeters` / `PlayerEnterHeightCubeHost`
-
-历史对照：`PlayerRealFloorRightTriggerSample` 写盘里 **`xrRightY≈0.9`** 时手在桌上，而 **`rightWorldY≈1.3+`** 明显偏大——应用前者，不用后者。
-
-## 以后
-
-- 要「**真实 / guardian 地面**」→ **XR `devicePosition.y`（Floor 模式）**  
-- 要「**游戏 mesh 地面**」→ 另写需求，用 `TryGetGameFloorWorldY` / 世界 Y 差，**不要**和真实地面 HUD 混读  
-- 禁止再堆 Transform 逆变换 + XR + 世界 Y 的「对照表」猜公式；先定量的是哪套地面，再选唯一读法  
-- 读不到 → 显示「获取不到」，不要 silent fallback 到另一条链
+- 前提 / Require: `XrOriginFloorTrackingBootstrap.IsFloorTrackingApplied == true`
+- 右手距真实地面 / Right hand vs real floor: `InputDevices.GetDeviceAtXRNode(XRNode.RightHand)` → `CommonUsages.devicePosition.y`（需 `isTracked`）
+- 头显距真实地面是另一条链：`headCamera.transform.localPosition.y`，不要和手公式混用。  
+  HMD vs real floor is a different chain: `headCamera.transform.localPosition.y`. Do not mix it with the hand formula.
+- 读不到就显示「获取不到」，不要 silent fallback 到另一条链。  
+  If unread, show “unavailable”; do not silently fall back to another chain.

@@ -1,13 +1,17 @@
-# 错题集（非规则）
+# 错题集 / Mistake notebook
 
-本目录是**踩坑备忘**，**不是** Cursor 项目规则（不放进 `.cursor/rules/`，不自动当强制约定）。
+本目录是**踩坑备忘**，不是 Cursor 强制规则（不要放进 `.cursor/rules/`）。
 
-用途：同类问题反复改代码仍不对时，先对照这里的已知根因，少绕弯。
+This folder is a **pitfall notebook**, not Cursor project rules (do not put it in `.cursor/rules/`).
 
-| 条目 | 一句话 |
-|------|--------|
-| [sfx-play-position-silent.md](./sfx-play-position-silent.md) | 多次改仍听不到音效 → 先查三维播音位置（尤其别错用手的位置） |
-| [new-log-missing-not-runtime-missing.md](./new-log-missing-not-runtime-missing.md) | 新埋点 log 没有 ≠ 用户看见的运行时没发生；先查 CS 红 / 本次 Play 是否加载新 DLL |
-| [vr-right-hand-real-floor-height.md](./vr-right-hand-real-floor-height.md) | 右手真实地面高度须读 XR Floor 的 `devicePosition.y`，勿用 AH/世界 Y / follow.local |
-| [vr-debug-cube-one-eye-missing.md](./vr-debug-cube-one-eye-missing.md) | VR 调试方块一眼有、一眼无 → 用 `Vr3StereoUnlitShaderUtil`，勿 `Shader.Find` 普通 Unlit/URP |
-| [xr-hmd-off-idle-18fps.md](./xr-hmd-off-idle-18fps.md) | Editor Play 空场景也 18 帧、卡在 XR Submit → 先开机头显并重连，直到头显能看到游戏画面 |
+同类问题反复改代码仍不对时，先对照这里的**问题 + 解决方案**。
+
+When the same class of bug keeps surviving code changes, match **Problem** and **Solution** here first.
+
+| 条目 / Entry | 问题 / Problem | 解决方案 / Solution |
+|------|--------|----------|
+| [sfx-play-position-silent.md](./sfx-play-position-silent.md) | 代码显示已播，仍像没声音 / Playback runs but sounds silent | 查三维播音世界坐标，勿用手位置 / Use world contact pos, not the hand |
+| [new-log-missing-not-runtime-missing.md](./new-log-missing-not-runtime-missing.md) | 新 log 没有 / New diagnostic log missing | 不等于玩法没发生；先查 CS 红与旧 DLL / Gameplay still happened; check compile errors and stale DLL |
+| [vr-right-hand-real-floor-height.md](./vr-right-hand-real-floor-height.md) | 右手距真实地面高度读错 / Wrong height vs real floor | 读 XR Floor `devicePosition.y` / Read XR Floor `devicePosition.y` |
+| [vr-debug-cube-one-eye-missing.md](./vr-debug-cube-one-eye-missing.md) | 调试方块一眼有一眼无 / Debug cube visible in one eye only | 用 `Vr3StereoUnlitShaderUtil` / Use `Vr3StereoUnlitShaderUtil` |
+| [xr-hmd-off-idle-18fps.md](./xr-hmd-off-idle-18fps.md) | Editor Play 空场景也 18 帧 / Empty Play stuck at 18 FPS | 开机头显、重连，直到头显能看到游戏 / Power on HMD, reconnect, until the headset shows the game |
